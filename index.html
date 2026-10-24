@@ -1,467 +1,287 @@
 
-<div id="ice-calendar" class="ice-calendar">
-  <style>
-    #ice-calendar {
-      --bg: #080e17;
-      --panel: #0b1421;
-      --cell: #0c1725;
-      --line: #164b76;
-      --blue: #238ee8;
-      --cyan: #53d5ff;
-      --text: #e7f5ff;
-      --muted: #63829d;
-      box-sizing: border-box;
-      width: 100%;
-      max-width: 276px;
-      margin: 0 auto;
-      padding: 14px;
-      color: var(--text);
-      background: linear-gradient(155deg, #0c1929, #060b12 75%);
-      border: 1px solid #173b5b;
-      border-radius: 13px;
-      font-family: Arial, sans-serif;
-      box-shadow: 0 0 20px #007bff0c, inset 0 0 18px #168bff05;
-      overflow: hidden;
-    }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WAC Match Center</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:12px;background:#0b1220;color:#e5edf9;
+font:13px Arial,sans-serif}
+.panel{background:#111c30;border:1px solid #243958;border-radius:12px;
+padding:12px;margin-bottom:10px}
+h2{font-size:16px;margin:0 0 10px;color:#8ec5ff}
+h3{font-size:12px;margin:0 0 9px;color:#b9d9ff}
+.match{background:#0b1628;border:1px solid #243958;border-radius:8px;
+padding:9px;margin-top:7px}
+.match strong{display:block;margin-bottom:5px;line-height:1.35}
+.meta{font-size:11px;color:#9db1cd;margin-bottom:8px}
+a.join{display:inline-block;text-decoration:none;background:#2878df;
+color:white;padding:6px 10px;border-radius:6px;font-weight:bold;font-size:11px}
+a.join:hover{background:#4595ff}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.nav{display:flex;align-items:center;gap:8px}
+button{background:#1b2b45;color:#d8eaff;border:1px solid #355276;
+border-radius:6px;padding:6px 10px;cursor:pointer}
+button:hover{background:#28466c}
+#month{font-weight:bold;text-align:center;flex:1}
+.week,.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.week{margin:12px 0 6px;text-align:center;color:#8da9ca;font-size:10px}
+.day{min-width:0;aspect-ratio:1;padding:4px 0;border-radius:6px;
+display:flex;flex-direction:column;align-items:center;justify-content:center;
+gap:3px;background:#17243a;border:1px solid transparent;font-size:12px}
+.day.empty{background:transparent}
+.day.today{border-color:#61aaff}
+.day.selected{background:#20569a;border-color:#8bc6ff}
+.dot{width:5px;height:5px;border-radius:50%;background:#4ba3ff}
+.day.has-live .dot{background:#46dfac}
+.day.has-ended .dot{background:#71829b}
+#details{margin-top:12px}
+.muted{color:#91a6c4;font-size:11px;line-height:1.5}
+.error{color:#ffb4b4}
+</style>
+</head>
+<body>
 
-    #ice-calendar * { box-sizing: border-box; }
+<section class="panel">
+  <h2>♟ WAC MATCH CENTER</h2>
+  <div class="muted">We Are The Champions · Club matches</div>
+  <div id="featured"></div>
+</section>
 
-    #ice-calendar .ic-header {
-      display: grid;
-      grid-template-columns: 37px 1fr 37px;
-      gap: 9px;
-      align-items: center;
-      margin-bottom: 14px;
-    }
-
-    #ice-calendar .ic-month {
-      margin: 0;
-      text-align: center;
-      font-size: 15px;
-      font-weight: 900;
-      letter-spacing: 1.3px;
-      text-transform: uppercase;
-      white-space: nowrap;
-      color: #dff5ff;
-    }
-
-    #ice-calendar .ic-month span {
-      color: var(--cyan);
-    }
-
-    #ice-calendar .ic-nav {
-      width: 37px;
-      height: 37px;
-      border: 1px solid #205783;
-      border-radius: 9px;
-      color: var(--cyan);
-      background: linear-gradient(145deg, #101f30, #080f19);
-      font-size: 23px;
-      line-height: 1;
-      cursor: pointer;
-      transition: .18s ease;
-    }
-
-    #ice-calendar .ic-nav:hover {
-      background: #12365a;
-      border-color: var(--cyan);
-      box-shadow: 0 0 12px #168bff30;
-    }
-
-    #ice-calendar .ic-week,
-    #ice-calendar .ic-days {
-      display: grid;
-      grid-template-columns: repeat(7, minmax(0, 1fr));
-    }
-
-    #ice-calendar .ic-week {
-      gap: 3px;
-      margin-bottom: 5px;
-    }
-
-    #ice-calendar .ic-week div {
-      min-width: 0;
-      padding: 8px 0;
-      text-align: center;
-      font-size: 10px;
-      font-weight: 900;
-      letter-spacing: .2px;
-      border: 1px solid #164b76;
-      border-radius: 5px;
-      background: #0d2033;
-      color: #b7eaff;
-    }
-
-    #ice-calendar .ic-week div:first-child,
-    #ice-calendar .ic-week div:last-child {
-      color: #70b9f4;
-      background: #102239;
-    }
-
-    #ice-calendar .ic-days {
-      border-top: 1px solid var(--line);
-      border-left: 1px solid var(--line);
-      border-radius: 6px;
-      overflow: hidden;
-    }
-
-    #ice-calendar .ic-day {
-      position: relative;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      min-width: 0;
-      height: 68px;
-      padding: 8px 1px 4px;
-      border: 0;
-      border-right: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-      border-radius: 0;
-      background: var(--cell);
-      color: #e5f3ff;
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: background .15s, box-shadow .15s;
-    }
-
-    #ice-calendar .ic-day:hover {
-      background: #122b43;
-      box-shadow: inset 0 0 0 1px #4cbcff;
-      z-index: 1;
-    }
-
-    #ice-calendar .ic-day.ic-outside {
-      background: #080e16;
-      color: #30475c;
-    }
-
-    #ice-calendar .ic-day.ic-today {
-      color: #fff;
-      background: linear-gradient(180deg, #164b79, #0c2944);
-      box-shadow: inset 0 0 0 1px var(--cyan),
-                  inset 0 0 16px #168bff28;
-    }
-
-    #ice-calendar .ic-day.ic-selected {
-      background: linear-gradient(160deg, #0877c8, #124a82);
-      box-shadow: inset 0 0 0 2px #65dcff,
-                  0 0 12px #168bff28;
-      color: white;
-      z-index: 2;
-    }
-
-    #ice-calendar .ic-day.ic-today::after {
-      content: "";
-      position: absolute;
-      bottom: 6px;
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: var(--cyan);
-      box-shadow: 0 0 7px var(--cyan);
-    }
-
-    #ice-calendar .ic-day.ic-selected::after {
-      background: white;
-      box-shadow: 0 0 6px white;
-    }
-
-    #ice-calendar .ic-dots {
-      position: absolute;
-      bottom: 8px;
-      left: 0;
-      right: 0;
-      display: flex;
-      justify-content: center;
-      gap: 3px;
-    }
-
-    #ice-calendar .ic-dot {
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-
-    #ice-calendar .ic-upcoming { background: #3da9ff; }
-    #ice-calendar .ic-soon { background: #63e0ff; }
-    #ice-calendar .ic-live { background: #ff647d; }
-    #ice-calendar .ic-ended { background: #637486; }
-
-    #ice-calendar .ic-info {
-      min-height: 42px;
-      margin-top: 11px;
-      padding: 9px 10px;
-      border: 1px solid #153c5d;
-      border-radius: 7px;
-      background: #0a1623;
-      font-size: 11px;
-      line-height: 1.5;
-      overflow-wrap: anywhere;
-    }
-
-    #ice-calendar .ic-info strong {
-      color: var(--cyan);
-    }
-
-    #ice-calendar .ic-legend {
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 7px;
-      margin-top: 12px;
-      padding-top: 10px;
-      border-top: 1px solid #183650;
-    }
-
-    #ice-calendar .ic-legend-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      color: #c6dcec;
-      font-size: 9px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    #ice-calendar .ic-legend-item .ic-dot {
-      width: 7px;
-      height: 7px;
-      box-shadow: 0 0 5px currentColor;
-    }
-
-    #ice-calendar .ic-today-btn {
-      display: block;
-      width: 100%;
-      margin-top: 9px;
-      padding: 7px;
-      border: 1px solid #194c71;
-      border-radius: 6px;
-      color: #8bdfff;
-      background: #0c1b2a;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: .6px;
-      cursor: pointer;
-    }
-
-    #ice-calendar .ic-today-btn:hover {
-      border-color: var(--cyan);
-      background: #102943;
-    }
-
-    @media (max-width: 240px) {
-      #ice-calendar { padding: 9px; }
-      #ice-calendar .ic-header { grid-template-columns: 30px 1fr 30px; gap: 5px; }
-      #ice-calendar .ic-nav { width: 30px; height: 32px; }
-      #ice-calendar .ic-month { font-size: 12px; letter-spacing: .5px; }
-      #ice-calendar .ic-week div { font-size: 8px; }
-      #ice-calendar .ic-day { height: 52px; font-size: 11px; }
-      #ice-calendar .ic-legend-item { font-size: 8px; }
-    }
-  </style>
-
-  <div class="ic-header">
-    <button class="ic-nav" type="button" data-action="prev"
-      aria-label="Previous month">&#8249;</button>
-    <h3 class="ic-month" aria-live="polite"></h3>
-    <button class="ic-nav" type="button" data-action="next"
-      aria-label="Next month">&#8250;</button>
+<section class="panel">
+  <div class="top">
+    <button id="prev" aria-label="Previous month">‹</button>
+    <div id="month"></div>
+    <button id="next" aria-label="Next month">›</button>
   </div>
-
-  <div class="ic-week" aria-hidden="true">
-    <div>MON</div><div>TUE</div><div>WED</div>
-    <div>THU</div><div>FRI</div><div>SAT</div><div>SUN</div>
+  <div class="week">
+    <span>MON</span><span>TUE</span><span>WED</span>
+    <span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
   </div>
-
-  <div class="ic-days" role="group" aria-label="Calendar dates"></div>
-
-  <div class="ic-info" aria-live="polite">
-    <strong class="ic-date-label">Selected date</strong>
-    <div class="ic-detail">Choose a day to view its details.</div>
+  <div class="days" id="days"></div>
+  <div id="details"><div class="muted">Select a date to see matches.</div></div>
+  <div class="muted" style="margin-top:12px">
+    <span style="color:#4ba3ff">●</span> Match
+    &nbsp; <span style="color:#46dfac">●</span> Live
+    &nbsp; <span style="color:#71829b">●</span> Ended
   </div>
+  <div id="status" class="muted" style="margin-top:8px">Loading matches…</div>
+</section>
 
-  <button type="button" class="ic-today-btn" data-action="today">
-    RETURN TO TODAY
-  </button>
+<script>
+const API = "https://api.chess.com/pub/club/we-are-the-champions-7/matches";
+const CLUB = "https://www.chess.com/club/we-are-the-champions-7";
+const $ = id => document.getElementById(id);
 
-  <div class="ic-legend">
-    <div class="ic-legend-item"><i class="ic-dot ic-upcoming"></i>Upcoming</div>
-    <div class="ic-legend-item"><i class="ic-dot ic-soon"></i>Soon</div>
-    <div class="ic-legend-item"><i class="ic-dot ic-live"></i>Live</div>
-    <div class="ic-legend-item"><i class="ic-dot ic-ended"></i>Ended</div>
-  </div>
+let matches = [];
+let selected = new Date();
+let view = new Date(selected.getFullYear(), selected.getMonth(), 1);
 
-  <script>
-    (() => {
-      const root = document.getElementById('ice-calendar');
-      if (!root || root.dataset.initialized) return;
-      root.dataset.initialized = 'true';
+const pad = n => String(n).padStart(2, "0");
+const dateKey = d =>
+  `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 
-      const monthLabel = root.querySelector('.ic-month');
-      const daysGrid = root.querySelector('.ic-days');
-      const dateLabel = root.querySelector('.ic-date-label');
-      const detail = root.querySelector('.ic-detail');
+function matchUrl(m) {
+  const raw = m.url || m["@id"] || "";
+  const id = raw.match(/\/(?:pub\/)?match\/(\d+)/i);
+  return id ? `https://www.chess.com/club/matches/${id[1]}` :
+    (raw.startsWith("https://www.chess.com/") ? raw : CLUB);
+}
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+function matchCard(m, type) {
+  const card = document.createElement("div");
+  card.className = "match";
 
-      let year = today.getFullYear();
-      let month = today.getMonth();
-      let selected = new Date(today);
+  const title = document.createElement("strong");
+  title.textContent = m.name || "Club match";
 
-      const monthNames = [
-        'January', 'February', 'March', 'April',
-        'May', 'June', 'July', 'August',
-        'September', 'October', 'November', 'December'
-      ];
+  const meta = document.createElement("div");
+  meta.className = "meta";
+  const labels = {
+    registered: "SUPPORT NEEDED · Join the match!",
+    in_progress: "LIVE NOW",
+    finished: "ENDED"
+  };
+  meta.textContent = labels[type] || "CLUB MATCH";
 
-      const pad = n => String(n).padStart(2, '0');
-      const key = date =>
-        `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  const link = document.createElement("a");
+  link.className = "join";
+  link.href = matchUrl(m);
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.textContent = type === "registered" ? "JOIN MATCH →" : "VIEW MATCH →";
 
-      // Add your real events here. Dates use YYYY-MM-DD.
-      // Example:
-      // '2026-10-25': [
-      //   { title: 'Club Tournament', status: 'upcoming' }
-      // ]
-      const events = {};
+  card.append(title, meta, link);
+  return card;
+}
 
-      const statusNames = {
-        upcoming: 'Upcoming',
-        soon: 'Soon',
-        live: 'Live',
-        ended: 'Ended'
-      };
+function getDate(m) {
+  if (!m.start_time) return null;
+  return dateKey(new Date(m.start_time * 1000));
+}
 
-      function showDate(date) {
-        selected = new Date(date);
-        dateLabel.textContent = selected.toLocaleDateString('en-US', {
-          weekday: 'short',
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric'
-        });
+function renderFeatured() {
+  const box = $("featured");
+  box.replaceChildren();
 
-        const list = events[key(selected)] || [];
+  const today = dateKey(new Date());
+  const liveToday = matches.filter(m =>
+    m.type === "in_progress" && getDate(m) === today
+  );
+  const support = matches.filter(m => m.type === "registered");
 
-        if (!list.length) {
-          detail.textContent = 'No events added for this date.';
-          return;
-        }
+  const heading1 = document.createElement("h3");
+  heading1.style.marginTop = "14px";
+  heading1.textContent = "🔴 TODAY'S LIVE MATCHES";
+  box.append(heading1);
 
-        detail.replaceChildren();
+  if (liveToday.length) {
+    liveToday.slice(0, 3).forEach(m => box.append(matchCard(m, m.type)));
+  } else {
+    const p = document.createElement("div");
+    p.className = "muted";
+    p.textContent = "No live matches found for today.";
+    box.append(p);
+  }
 
-        list.forEach((event, index) => {
-          if (index) detail.appendChild(document.createElement('br'));
+  const heading2 = document.createElement("h3");
+  heading2.style.marginTop = "14px";
+  heading2.textContent = "⚡ SUPPORT NEEDED — JOIN IN!";
+  box.append(heading2);
 
-          const name = document.createElement('strong');
-          name.textContent = event.title || 'Untitled event';
-          detail.appendChild(name);
+  if (support.length) {
+    support.slice(0, 3).forEach(m => box.append(matchCard(m, m.type)));
+    if (support.length > 3) {
+      const p = document.createElement("div");
+      p.className = "muted";
+      p.textContent = `+ ${support.length - 3} more registered matches`;
+      box.append(p);
+    }
+  } else {
+    const p = document.createElement("div");
+    p.className = "muted";
+    p.textContent = "No registered matches returned by the API.";
+    box.append(p);
+  }
+}
 
-          if (event.status && statusNames[event.status]) {
-            detail.appendChild(document.createTextNode(
-              ' · ' + statusNames[event.status]
-            ));
-          }
-        });
-      }
+function renderCalendar() {
+  $("month").textContent = view.toLocaleDateString("en-US", {
+    month: "long", year: "numeric"
+  });
 
-      function render() {
-        monthLabel.replaceChildren();
+  const daysBox = $("days");
+  daysBox.replaceChildren();
 
-        const name = document.createElement('span');
-        name.textContent = monthNames[month] + ' ';
+  const first = new Date(view.getFullYear(), view.getMonth(), 1);
+  const offset = (first.getDay() + 6) % 7;
+  const count = new Date(view.getFullYear(), view.getMonth()+1, 0).getDate();
+  const today = dateKey(new Date());
 
-        const yearText = document.createTextNode(String(year));
-        monthLabel.append(name, yearText);
+  for (let i = 0; i < offset; i++) {
+    const empty = document.createElement("div");
+    empty.className = "day empty";
+    daysBox.append(empty);
+  }
 
-        daysGrid.replaceChildren();
+  for (let n = 1; n <= count; n++) {
+    const d = new Date(view.getFullYear(), view.getMonth(), n);
+    const key = dateKey(d);
+    const events = matches.filter(m => getDate(m) === key);
+    const hasLive = events.some(m => m.type === "in_progress");
+    const hasEnded = events.length && events.every(m => m.type === "finished");
 
-        // Monday-based grid; always display six full weeks.
-        const first = new Date(year, month, 1);
-        const offset = (first.getDay() + 6) % 7;
-        const start = new Date(year, month, 1 - offset);
+    const b = document.createElement("button");
+    b.className = "day";
+    if (key === today) b.classList.add("today");
+    if (key === dateKey(selected)) b.classList.add("selected");
+    if (hasLive) b.classList.add("has-live");
+    else if (hasEnded) b.classList.add("has-ended");
 
-        for (let i = 0; i < 42; i++) {
-          const date = new Date(start);
-          date.setDate(start.getDate() + i);
+    const num = document.createElement("span");
+    num.textContent = n;
+    b.append(num);
 
-          const dateKey = key(date);
-          const inMonth = date.getMonth() === month;
-          const isToday = dateKey === key(today);
-          const isSelected = dateKey === key(selected);
+    if (events.length) {
+      const dot = document.createElement("span");
+      dot.className = "dot";
+      b.append(dot);
+    }
 
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.className = 'ic-day';
-          button.textContent = date.getDate();
-          button.setAttribute('aria-label', date.toLocaleDateString(
-            'en-US', {
-              weekday: 'long',
-              month: 'long',
-              day: 'numeric',
-              year: 'numeric'
-            }
-          ));
+    b.addEventListener("click", () => {
+      selected = d;
+      renderCalendar();
+      renderDetails();
+    });
+    daysBox.append(b);
+  }
+}
 
-          if (!inMonth) button.classList.add('ic-outside');
-          if (isToday) button.classList.add('ic-today');
-          if (isSelected) button.classList.add('ic-selected');
-          if (isToday) button.setAttribute('aria-current', 'date');
-          if (isSelected) button.setAttribute('aria-pressed', 'true');
+function renderDetails() {
+  const box = $("details");
+  box.replaceChildren();
 
-          const dayEvents = events[dateKey] || [];
-          const dots = document.createElement('span');
-          dots.className = 'ic-dots';
-          dots.setAttribute('aria-hidden', 'true');
+  const heading = document.createElement("h3");
+  heading.textContent = selected.toLocaleDateString("en-US", {
+    weekday: "short", month: "short", day: "numeric", year: "numeric"
+  });
+  box.append(heading);
 
-          dayEvents.forEach(event => {
-            if (!statusNames[event.status]) return;
-            const dot = document.createElement('i');
-            dot.className = 'ic-dot ic-' + event.status;
-            dots.appendChild(dot);
-          });
+  const found = matches.filter(m => getDate(m) === dateKey(selected));
+  if (!found.length) {
+    const p = document.createElement("div");
+    p.className = "muted";
+    p.textContent = "No matches with a scheduled start date were found for this day.";
+    box.append(p);
+    return;
+  }
 
-          if (dots.childNodes.length) {
-            button.appendChild(dots);
-            button.title = dayEvents.map(e => e.title).join(', ');
-          }
+  found.forEach(m => box.append(matchCard(m, m.type)));
+}
 
-          button.addEventListener('click', () => {
-            showDate(date);
-            render();
-          });
+async function loadMatches() {
+  try {
+    const response = await fetch(API);
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    const data = await response.json();
 
-          daysGrid.appendChild(button);
-        }
-      }
+    matches = [];
+    ["in_progress", "registered", "finished"].forEach(type => {
+      (data[type] || []).forEach(m => matches.push({...m, type}));
+    });
 
-      root.addEventListener('click', event => {
-        const button = event.target.closest('button[data-action]');
-        if (!button) return;
+    renderFeatured();
+    renderCalendar();
+    renderDetails();
+    $("status").textContent =
+      `Loaded ${matches.length} matches · Data provided by Chess.com`;
+  } catch (e) {
+    $("status").innerHTML =
+      '<span class="error">Could not load matches. Open the club page to check matches.</span>';
+    const link = document.createElement("a");
+    link.className = "join";
+    link.href = CLUB;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = "OPEN WAC CLUB →";
+    $("status").append(document.createElement("br"), link);
+  }
+}
 
-        const action = button.dataset.action;
+$("prev").addEventListener("click", () => {
+  view.setMonth(view.getMonth()-1);
+  renderCalendar();
+});
+$("next").addEventListener("click", () => {
+  view.setMonth(view.getMonth()+1);
+  renderCalendar();
+});
 
-        if (action === 'prev') {
-          month--;
-          if (month < 0) { month = 11; year--; }
-        } else if (action === 'next') {
-          month++;
-          if (month > 11) { month = 0; year++; }
-        } else if (action === 'today') {
-          year = today.getFullYear();
-          month = today.getMonth();
-          showDate(today);
-        }
-
-        render();
-      });
-
-      showDate(today);
-      render();
-    })();
-  </script>
-</div>
+renderCalendar();
+renderDetails();
+loadMatches();
+</script>
+</body>
+</html>
