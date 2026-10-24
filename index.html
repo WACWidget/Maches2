@@ -1,0 +1,467 @@
+
+<div id="ice-calendar" class="ice-calendar">
+  <style>
+    #ice-calendar {
+      --bg: #080e17;
+      --panel: #0b1421;
+      --cell: #0c1725;
+      --line: #164b76;
+      --blue: #238ee8;
+      --cyan: #53d5ff;
+      --text: #e7f5ff;
+      --muted: #63829d;
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 276px;
+      margin: 0 auto;
+      padding: 14px;
+      color: var(--text);
+      background: linear-gradient(155deg, #0c1929, #060b12 75%);
+      border: 1px solid #173b5b;
+      border-radius: 13px;
+      font-family: Arial, sans-serif;
+      box-shadow: 0 0 20px #007bff0c, inset 0 0 18px #168bff05;
+      overflow: hidden;
+    }
+
+    #ice-calendar * { box-sizing: border-box; }
+
+    #ice-calendar .ic-header {
+      display: grid;
+      grid-template-columns: 37px 1fr 37px;
+      gap: 9px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    #ice-calendar .ic-month {
+      margin: 0;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      color: #dff5ff;
+    }
+
+    #ice-calendar .ic-month span {
+      color: var(--cyan);
+    }
+
+    #ice-calendar .ic-nav {
+      width: 37px;
+      height: 37px;
+      border: 1px solid #205783;
+      border-radius: 9px;
+      color: var(--cyan);
+      background: linear-gradient(145deg, #101f30, #080f19);
+      font-size: 23px;
+      line-height: 1;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+
+    #ice-calendar .ic-nav:hover {
+      background: #12365a;
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px #168bff30;
+    }
+
+    #ice-calendar .ic-week,
+    #ice-calendar .ic-days {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+
+    #ice-calendar .ic-week {
+      gap: 3px;
+      margin-bottom: 5px;
+    }
+
+    #ice-calendar .ic-week div {
+      min-width: 0;
+      padding: 8px 0;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .2px;
+      border: 1px solid #164b76;
+      border-radius: 5px;
+      background: #0d2033;
+      color: #b7eaff;
+    }
+
+    #ice-calendar .ic-week div:first-child,
+    #ice-calendar .ic-week div:last-child {
+      color: #70b9f4;
+      background: #102239;
+    }
+
+    #ice-calendar .ic-days {
+      border-top: 1px solid var(--line);
+      border-left: 1px solid var(--line);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    #ice-calendar .ic-day {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      min-width: 0;
+      height: 68px;
+      padding: 8px 1px 4px;
+      border: 0;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      border-radius: 0;
+      background: var(--cell);
+      color: #e5f3ff;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background .15s, box-shadow .15s;
+    }
+
+    #ice-calendar .ic-day:hover {
+      background: #122b43;
+      box-shadow: inset 0 0 0 1px #4cbcff;
+      z-index: 1;
+    }
+
+    #ice-calendar .ic-day.ic-outside {
+      background: #080e16;
+      color: #30475c;
+    }
+
+    #ice-calendar .ic-day.ic-today {
+      color: #fff;
+      background: linear-gradient(180deg, #164b79, #0c2944);
+      box-shadow: inset 0 0 0 1px var(--cyan),
+                  inset 0 0 16px #168bff28;
+    }
+
+    #ice-calendar .ic-day.ic-selected {
+      background: linear-gradient(160deg, #0877c8, #124a82);
+      box-shadow: inset 0 0 0 2px #65dcff,
+                  0 0 12px #168bff28;
+      color: white;
+      z-index: 2;
+    }
+
+    #ice-calendar .ic-day.ic-today::after {
+      content: "";
+      position: absolute;
+      bottom: 6px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 7px var(--cyan);
+    }
+
+    #ice-calendar .ic-day.ic-selected::after {
+      background: white;
+      box-shadow: 0 0 6px white;
+    }
+
+    #ice-calendar .ic-dots {
+      position: absolute;
+      bottom: 8px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 3px;
+    }
+
+    #ice-calendar .ic-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    #ice-calendar .ic-upcoming { background: #3da9ff; }
+    #ice-calendar .ic-soon { background: #63e0ff; }
+    #ice-calendar .ic-live { background: #ff647d; }
+    #ice-calendar .ic-ended { background: #637486; }
+
+    #ice-calendar .ic-info {
+      min-height: 42px;
+      margin-top: 11px;
+      padding: 9px 10px;
+      border: 1px solid #153c5d;
+      border-radius: 7px;
+      background: #0a1623;
+      font-size: 11px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    #ice-calendar .ic-info strong {
+      color: var(--cyan);
+    }
+
+    #ice-calendar .ic-legend {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #183650;
+    }
+
+    #ice-calendar .ic-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #c6dcec;
+      font-size: 9px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    #ice-calendar .ic-legend-item .ic-dot {
+      width: 7px;
+      height: 7px;
+      box-shadow: 0 0 5px currentColor;
+    }
+
+    #ice-calendar .ic-today-btn {
+      display: block;
+      width: 100%;
+      margin-top: 9px;
+      padding: 7px;
+      border: 1px solid #194c71;
+      border-radius: 6px;
+      color: #8bdfff;
+      background: #0c1b2a;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .6px;
+      cursor: pointer;
+    }
+
+    #ice-calendar .ic-today-btn:hover {
+      border-color: var(--cyan);
+      background: #102943;
+    }
+
+    @media (max-width: 240px) {
+      #ice-calendar { padding: 9px; }
+      #ice-calendar .ic-header { grid-template-columns: 30px 1fr 30px; gap: 5px; }
+      #ice-calendar .ic-nav { width: 30px; height: 32px; }
+      #ice-calendar .ic-month { font-size: 12px; letter-spacing: .5px; }
+      #ice-calendar .ic-week div { font-size: 8px; }
+      #ice-calendar .ic-day { height: 52px; font-size: 11px; }
+      #ice-calendar .ic-legend-item { font-size: 8px; }
+    }
+  </style>
+
+  <div class="ic-header">
+    <button class="ic-nav" type="button" data-action="prev"
+      aria-label="Previous month">&#8249;</button>
+    <h3 class="ic-month" aria-live="polite"></h3>
+    <button class="ic-nav" type="button" data-action="next"
+      aria-label="Next month">&#8250;</button>
+  </div>
+
+  <div class="ic-week" aria-hidden="true">
+    <div>MON</div><div>TUE</div><div>WED</div>
+    <div>THU</div><div>FRI</div><div>SAT</div><div>SUN</div>
+  </div>
+
+  <div class="ic-days" role="group" aria-label="Calendar dates"></div>
+
+  <div class="ic-info" aria-live="polite">
+    <strong class="ic-date-label">Selected date</strong>
+    <div class="ic-detail">Choose a day to view its details.</div>
+  </div>
+
+  <button type="button" class="ic-today-btn" data-action="today">
+    RETURN TO TODAY
+  </button>
+
+  <div class="ic-legend">
+    <div class="ic-legend-item"><i class="ic-dot ic-upcoming"></i>Upcoming</div>
+    <div class="ic-legend-item"><i class="ic-dot ic-soon"></i>Soon</div>
+    <div class="ic-legend-item"><i class="ic-dot ic-live"></i>Live</div>
+    <div class="ic-legend-item"><i class="ic-dot ic-ended"></i>Ended</div>
+  </div>
+
+  <script>
+    (() => {
+      const root = document.getElementById('ice-calendar');
+      if (!root || root.dataset.initialized) return;
+      root.dataset.initialized = 'true';
+
+      const monthLabel = root.querySelector('.ic-month');
+      const daysGrid = root.querySelector('.ic-days');
+      const dateLabel = root.querySelector('.ic-date-label');
+      const detail = root.querySelector('.ic-detail');
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      let year = today.getFullYear();
+      let month = today.getMonth();
+      let selected = new Date(today);
+
+      const monthNames = [
+        'January', 'February', 'March', 'April',
+        'May', 'June', 'July', 'August',
+        'September', 'October', 'November', 'December'
+      ];
+
+      const pad = n => String(n).padStart(2, '0');
+      const key = date =>
+        `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+
+      // Add your real events here. Dates use YYYY-MM-DD.
+      // Example:
+      // '2026-10-25': [
+      //   { title: 'Club Tournament', status: 'upcoming' }
+      // ]
+      const events = {};
+
+      const statusNames = {
+        upcoming: 'Upcoming',
+        soon: 'Soon',
+        live: 'Live',
+        ended: 'Ended'
+      };
+
+      function showDate(date) {
+        selected = new Date(date);
+        dateLabel.textContent = selected.toLocaleDateString('en-US', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        });
+
+        const list = events[key(selected)] || [];
+
+        if (!list.length) {
+          detail.textContent = 'No events added for this date.';
+          return;
+        }
+
+        detail.replaceChildren();
+
+        list.forEach((event, index) => {
+          if (index) detail.appendChild(document.createElement('br'));
+
+          const name = document.createElement('strong');
+          name.textContent = event.title || 'Untitled event';
+          detail.appendChild(name);
+
+          if (event.status && statusNames[event.status]) {
+            detail.appendChild(document.createTextNode(
+              ' · ' + statusNames[event.status]
+            ));
+          }
+        });
+      }
+
+      function render() {
+        monthLabel.replaceChildren();
+
+        const name = document.createElement('span');
+        name.textContent = monthNames[month] + ' ';
+
+        const yearText = document.createTextNode(String(year));
+        monthLabel.append(name, yearText);
+
+        daysGrid.replaceChildren();
+
+        // Monday-based grid; always display six full weeks.
+        const first = new Date(year, month, 1);
+        const offset = (first.getDay() + 6) % 7;
+        const start = new Date(year, month, 1 - offset);
+
+        for (let i = 0; i < 42; i++) {
+          const date = new Date(start);
+          date.setDate(start.getDate() + i);
+
+          const dateKey = key(date);
+          const inMonth = date.getMonth() === month;
+          const isToday = dateKey === key(today);
+          const isSelected = dateKey === key(selected);
+
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'ic-day';
+          button.textContent = date.getDate();
+          button.setAttribute('aria-label', date.toLocaleDateString(
+            'en-US', {
+              weekday: 'long',
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric'
+            }
+          ));
+
+          if (!inMonth) button.classList.add('ic-outside');
+          if (isToday) button.classList.add('ic-today');
+          if (isSelected) button.classList.add('ic-selected');
+          if (isToday) button.setAttribute('aria-current', 'date');
+          if (isSelected) button.setAttribute('aria-pressed', 'true');
+
+          const dayEvents = events[dateKey] || [];
+          const dots = document.createElement('span');
+          dots.className = 'ic-dots';
+          dots.setAttribute('aria-hidden', 'true');
+
+          dayEvents.forEach(event => {
+            if (!statusNames[event.status]) return;
+            const dot = document.createElement('i');
+            dot.className = 'ic-dot ic-' + event.status;
+            dots.appendChild(dot);
+          });
+
+          if (dots.childNodes.length) {
+            button.appendChild(dots);
+            button.title = dayEvents.map(e => e.title).join(', ');
+          }
+
+          button.addEventListener('click', () => {
+            showDate(date);
+            render();
+          });
+
+          daysGrid.appendChild(button);
+        }
+      }
+
+      root.addEventListener('click', event => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+
+        const action = button.dataset.action;
+
+        if (action === 'prev') {
+          month--;
+          if (month < 0) { month = 11; year--; }
+        } else if (action === 'next') {
+          month++;
+          if (month > 11) { month = 0; year++; }
+        } else if (action === 'today') {
+          year = today.getFullYear();
+          month = today.getMonth();
+          showDate(today);
+        }
+
+        render();
+      });
+
+      showDate(today);
+      render();
+    })();
+  </script>
+</div>
